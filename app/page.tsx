@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { AddCandidateForm } from '@/components/candidate/AddCandidateForm';
 import { FindTalentForm } from '@/components/candidate/FindTalentSection';
+import { CandidateCard } from '@/components/candidate/candidateCard'; // Import the new card
 
 type Tab = 'add' | 'find';
 
-interface Candidate {
+// Define a comprehensive Candidate interface that includes AI fields
+export interface Candidate {
   _id: string;
   name: string;
   email?: string;
@@ -28,26 +30,31 @@ interface Candidate {
     description: string;
     technologiesUsed: string[];
   }[];
+  // DB & AI scores
   relevanceScore?: number;
+  densityScore?: number;
+  aiScore?: number | null;
+  reasonToHire?: string;
 }
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<Tab>('add');
+  const [activeTab, setActiveTab] = useState<Tab>('find');
   const [searchResults, setSearchResults] = useState<Candidate[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
+  // A cleaner, reusable TabButton component
   const TabButton = ({ tabId, label }: { tabId: Tab; label: string }) => (
     <button
       onClick={() => {
         setActiveTab(tabId);
-        if (tabId === 'find') {
-          setSearchResults([]); // Clear results when switching to find tab
-        }
+        setHasSearched(false);
+        setSearchResults([]);
       }}
-      className={`px-4 py-2.5 text-sm font-medium rounded-md transition-colors
+      className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2
         ${activeTab === tabId
-          ? 'bg-blue-600 text-white shadow'
-          : 'text-gray-600 hover:bg-gray-200'
+          ? 'bg-white text-indigo-700 shadow-sm'
+          : 'text-slate-600 hover:bg-slate-200 hover:text-slate-800'
         }`}
     >
       {label}
@@ -57,140 +64,68 @@ export default function Home() {
   const handleSearchResults = (results: Candidate[]) => {
     setSearchResults(results);
     setIsSearching(false);
-  };
-
-  const handleSearchSubmit = async (formData: any) => {
-    setIsSearching(true);
-    // The search API call is now handled in FindTalentForm
-  };
-
-  // Format experience for display
-  const formatExperience = (years?: number) => {
-    if (years === undefined) return 'Not specified';
-    return years === 1 ? '1 year' : `${years} years`;
+    setHasSearched(true);
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="text-center mb-10">
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900">
-          Sereno Talent Database
-        </h1>
-        <p className="mt-3 text-lg text-gray-600">
-          The single source for parsing, storing, and discovering talent.
-        </p>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="flex justify-center mb-8">
-        <div className="flex space-x-2 bg-gray-100 p-1.5 rounded-lg">
-          <TabButton tabId="add" label="Add Candidate" />
-          <TabButton tabId="find" label="Find Talent" />
+    <div className="min-h-screen bg-slate-50">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            Sereno Talent Intelligence
+          </h1>
+          <p className="mt-3 text-md text-slate-600 max-w-2xl mx-auto">
+            The single source for parsing, storing, and discovering talent.
+          </p>
         </div>
-      </div>
 
-      {/* Conditional Content */}
-      <div className="mt-4">
-        {activeTab === 'add' && <AddCandidateForm />}
-        {activeTab === 'find' && (
-          <>
-            <FindTalentForm onSearch={handleSearchResults} isSearching={isSearching} />
-            
-            {/* Display search results */}
-            {searchResults.length > 0 && (
-              <div className="mt-8">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Search Results ({searchResults.length})</h2>
-                <div className="space-y-4">
-                  {searchResults.map((candidate) => (
-                    <div key={candidate._id} className="bg-white p-6 border border-gray-200 rounded-lg shadow-sm">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900">{candidate.name}</h3>
-                          <div className="mt-1 flex flex-wrap gap-2">
-                            {candidate.location && (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {candidate.location}
-                              </span>
-                            )}
-                            {candidate.totalExperience !== undefined && (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                {formatExperience(candidate.totalExperience)}
-                              </span>
-                            )}
-                            {candidate.workPreference && (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                {candidate.workPreference}
-                              </span>
-                            )}
-                          </div>
-                          
-                          {candidate.skills && candidate.skills.length > 0 && (
-                            <div className="mt-3">
-                              <h4 className="text-sm font-medium text-gray-700">Skills</h4>
-                              <div className="mt-1 flex flex-wrap gap-1">
-                                {candidate.skills.slice(0, 5).map((skill, idx) => (
-                                  <span 
-                                    key={idx} 
-                                    className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
-                                  >
-                                    {skill}
-                                  </span>
-                                ))}
-                                {candidate.skills.length > 5 && (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">
-                                    +{candidate.skills.length - 5} more
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {candidate.relevanceScore !== undefined && (
-                          <div className="text-right">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              Score: {candidate.relevanceScore}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {candidate.careerTimeline && candidate.careerTimeline.length > 0 && (
-                        <div className="mt-3">
-                          <h4 className="text-sm font-medium text-gray-700">Recent Experience</h4>
-                          <ul className="mt-1 space-y-1">
-                            {candidate.careerTimeline.slice(0, 2).map((job, idx) => (
-                              <li key={idx} className="text-sm text-gray-600">
-                                <span className="font-medium">{job.role}</span> at <span className="font-medium">{job.company}</span>
-                                {job.startDate && job.endDate && (
-                                  <span> ({job.startDate} - {job.endDate})</span>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+        {/* Tab Navigation */}
+        <div className="flex justify-center mb-10">
+          <div className="flex space-x-2 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
+            <TabButton tabId="add" label="Add Candidate" />
+            <TabButton tabId="find" label="Find Talent" />
+          </div>
+        </div>
+
+        {/* Conditional Content */}
+        <div className="mt-4">
+          {activeTab === 'add' && <AddCandidateForm />}
+          {activeTab === 'find' && (
+            <div className="space-y-12">
+              <FindTalentForm onSearch={handleSearchResults} isSearching={isSearching} />
+              
+              {isSearching && (
+                <div className="text-center py-16">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                    <p className="mt-4 text-slate-500">Analyzing candidates with AI...</p>
                 </div>
-              </div>
-            )}
-            
-            {isSearching && (
-              <div className="mt-8 text-center">
-                <p className="text-gray-600">Searching talent pool...</p>
-              </div>
-            )}
-            
-            {!isSearching && searchResults.length === 0 && activeTab === 'find' && (
-              <div className="mt-8 text-center">
-                <p className="text-gray-600">Enter search criteria to find candidates.</p>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+              )}
+
+              {hasSearched && !isSearching && (
+                 <div>
+                    <h2 className="text-xl font-semibold text-slate-800 mb-6">Analysis Results ({searchResults.length})</h2>
+                    {searchResults.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {searchResults.map((candidate) => (
+                                <CandidateCard 
+                                    key={candidate._id} 
+                                    candidate={candidate}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-16 bg-white border border-dashed border-slate-300 rounded-lg">
+                            <h3 className="text-lg font-medium text-slate-800">No Matches Found</h3>
+                            <p className="text-slate-500 mt-1">Try adjusting your search criteria.</p>
+                        </div>
+                    )}
+                 </div>
+              )}
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
