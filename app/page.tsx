@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { AddCandidateForm } from '@/components/candidate/AddCandidateForm';
 import { FindTalentForm } from '@/components/candidate/FindTalentSection';
-import { CandidateCard } from '@/components/candidate/candidateCard'; // Import the new card
+import { CandidateCard } from '@/components/candidate/CandidateCard';
 
 type Tab = 'add' | 'find';
 
