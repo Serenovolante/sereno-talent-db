@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import mammoth from 'mammoth';
-import { PDFParse } from 'pdf-parse';
+import PDFParse from 'pdf-parse-fork';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Candidate from '@/models/candidate';
 import connectToDatabase from '@/lib/mongodb';
@@ -12,8 +12,7 @@ async function parseResume(file: File): Promise<string> {
     const { value } = await mammoth.extractRawText({ buffer });
     return value;
   } else if (file.type === 'application/pdf') {
-    const parser = new PDFParse({ data: buffer });
-    const data = await parser.getText();
+    const data = await PDFParse(buffer);
     return data.text;
   }
 
@@ -52,7 +51,7 @@ export async function POST(request: Request) {
         "careerTimeline": [
           {
             "role": "string",
-            "company": "string",
+            "company": "string", 
             "startDate": "string",
             "endDate": "string",
             "description": "string"
