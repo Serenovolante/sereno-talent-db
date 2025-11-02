@@ -29,7 +29,7 @@ export const AddCandidateForm = () => {
   });
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || isUploading) return;
 
     setIsUploading(true);
     setError(null);
@@ -66,46 +66,47 @@ export const AddCandidateForm = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
-        <div className="bg-white p-8 border border-gray-200 rounded-lg shadow-sm">
-            <h2 className="text-2xl font-bold tracking-tight text-gray-900">Upload Resume</h2>
-            <p className="text-gray-600 mt-1">Add a new candidate by uploading their resume file.</p>
+        <div className="bg-white p-8 rounded-lg shadow-sm" style={{ borderRadius: '12px' }}>
+            <h2 className="text-2xl font-bold text-slate-900">Upload Resume</h2>
+            <p className="text-slate-600 mt-1">Add a new candidate by uploading their resume file.</p>
             <div
                 {...getRootProps()}
-                className={`mt-6 border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors
-                ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
+                className={`mt-6 border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${isDragActive ? 'border-slate-900 bg-slate-50' : 'border-slate-300 hover:border-slate-500'}`}
+                style={{ borderRadius: '8px' }}
             >
                 <input {...getInputProps()} />
                 <div className="flex flex-col items-center">
-                    <UploadCloud className="w-12 h-12 text-gray-400 mb-4" />
+                    <UploadCloud className="w-12 h-12 text-slate-400 mb-4" />
                     {isDragActive ? (
-                        <p className="text-blue-600 font-semibold">Drop the file here ...</p>
+                        <p className="text-slate-900 font-semibold">Drop the file here ...</p>
                     ) : (
-                        <p className="text-gray-500">
-                        <span className="font-semibold text-blue-600">Click to upload</span> or drag and drop
+                        <p className="text-slate-500">
+                        <span className="font-semibold text-slate-900">Click to upload</span> or drag and drop
                         </p>
                     )}
-                    <p className="text-xs text-gray-400 mt-2">PDF or DOCX</p>
+                    <p className="text-xs text-slate-400 mt-2">PDF or DOCX</p>
                 </div>
             </div>
 
             {file && !isUploading && (
-                <div className="mt-6 bg-gray-100 p-4 rounded-lg flex items-center justify-between">
+                <div className="mt-6 bg-slate-100 p-4 rounded-lg flex items-center justify-between" style={{ borderRadius: '8px' }}>
                     <div className="flex items-center gap-3">
-                        <FileText className="w-6 h-6 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-800">{file.name}</span>
+                        <FileText className="w-6 h-6 text-slate-600" />
+                        <span className="text-sm font-medium text-slate-800">{file.name}</span>
                     </div>
-                    <button onClick={removeFile} className="text-gray-500 hover:text-red-600"><X className="w-5 h-5" /></button>
+                    <button onClick={removeFile} className="text-slate-500 hover:text-red-600"><X className="w-5 h-5" /></button>
                 </div>
             )}
 
             {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
             {success && <p className="mt-4 text-sm text-green-600">{success}</p>}
 
-            <div className="mt-8 text-right">
+            <div className="mt-8 flex justify-end">
                 <button
                 onClick={handleUpload}
                 disabled={!file || isUploading}
-                className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center px-6 py-3 text-base font-medium rounded-md text-white bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed"
+                style={{ borderRadius: '8px' }}
                 >
                 {isUploading ? 'Analyzing...' : 'Parse and Save Candidate'}
                 </button>
