@@ -38,10 +38,18 @@ interface CandidateCardProps {
   candidate: Candidate;
 }
 
-// Helper to format experience years
+// Helper to format experience years - rounded to single decimal place
 const formatExperience = (years?: number) => {
     if (years === undefined || years === null) return null;
-    return years < 1 ? `${Math.round(years * 12)} mos exp` : `${years} ${years === 1 ? 'yr' : 'yrs'} exp`;
+    
+    // Round to single decimal place
+    const roundedYears = Number(years.toFixed(1));
+    
+    if (roundedYears < 1) {
+        const months = Math.round(roundedYears * 12);
+        return `${months} mos exp`;
+    } 
+    return `${roundedYears} ${roundedYears === 1 ? 'yr' : 'yrs'} exp`;
 };
 
 // Helper to get the most recent role
@@ -101,6 +109,20 @@ export const CandidateCard = ({ candidate }: CandidateCardProps) => {
               <div className="flex items-center">
                   <Briefcase className="w-4 h-4 text-slate-500 mr-1.5" />
                   <span>{experienceText}</span>
+              </div>
+          )}
+          {candidate.email && (
+              <div className="flex items-center">
+                  <span className="text-xs bg-slate-100 px-2 py-0.5 rounded" style={{ borderRadius: '4px' }}>
+                      {candidate.email}
+                  </span>
+              </div>
+          )}
+          {candidate.phone && (
+              <div className="flex items-center">
+                  <span className="text-xs bg-slate-100 px-2 py-0.5 rounded" style={{ borderRadius: '4px' }}>
+                      {candidate.phone}
+                  </span>
               </div>
           )}
         </div>

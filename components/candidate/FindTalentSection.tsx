@@ -46,7 +46,7 @@ export const FindTalentForm = ({ onSearch, isSearching }: FindTalentFormProps) =
       <p className="text-slate-600 mt-1">Find profiles by keywords, filters, or a full job description.</p>
         <form onSubmit={handleSubmit} className="mt-6 space-y-6">
         <div>
-            <label htmlFor="jd" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="jd" className="block text-sm font-medium text-slate-800">
             Job Description (for context)
             </label>
             <div className="mt-1">
@@ -54,7 +54,7 @@ export const FindTalentForm = ({ onSearch, isSearching }: FindTalentFormProps) =
                 id="jd"
                 name="jd"
                 rows={5}
-                className="block w-full rounded-md border-slate-300 focus:border-slate-900 focus:ring-slate-900 sm:text-sm p-3 border"
+                className="block w-full rounded-md border-slate-300 placeholder:text-gray-700 focus:border-slate-900 focus:ring-slate-900 sm:text-sm p-3 border"
                 placeholder="e.g., A senior developer to lead our frontend team..."
                 style={{ borderRadius: '8px' }}
             />
@@ -64,7 +64,7 @@ export const FindTalentForm = ({ onSearch, isSearching }: FindTalentFormProps) =
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             {/* UPDATED FIELD: Location is now Keywords */}
             <div>
-                <label htmlFor="keywords" className="block text-sm font-medium text-slate-700">
+                <label htmlFor="keywords" className="block text-sm font-medium text-slate-800">
                     Skills / Keywords <span className="text-red-500">*</span>
                 </label>
                 <input 
@@ -72,7 +72,7 @@ export const FindTalentForm = ({ onSearch, isSearching }: FindTalentFormProps) =
                     name="keywords" 
                     id="keywords" 
                     placeholder="e.g., react, node, python" 
-                    className="mt-1 block w-full rounded-md border-slate-300 focus:border-slate-900 focus:ring-slate-900 sm:text-sm p-3 border" 
+                    className="mt-1 block w-full rounded-md border-slate-300 placeholder:text-gray-700 focus:border-slate-900 focus:ring-slate-900 sm:text-sm p-3 border" 
                     style={{ borderRadius: '8px' }}
                     required // Making this field required for a more focused search
                 />
@@ -80,19 +80,19 @@ export const FindTalentForm = ({ onSearch, isSearching }: FindTalentFormProps) =
 
             {/* Unchanged Fields */}
             <div>
-                <label htmlFor="experience" className="block text-sm font-medium text-slate-700">Min. Experience (Years)</label>
-                <input type="number" name="experience" id="experience" placeholder="e.g., 5" className="mt-1 block w-full rounded-md border-slate-300 focus:border-slate-900 focus:ring-slate-900 sm:text-sm p-3 border" style={{ borderRadius: '8px' }} />
+                <label htmlFor="experience" className="block text-sm font-medium text-slate-800">Min. Experience (Years)</label>
+                <input type="number" name="experience" id="experience" placeholder="e.g., 5" className="mt-1 placeholder:text-gray-700 block w-full rounded-md border-slate-300 focus:border-slate-900 focus:ring-slate-900 sm:text-sm p-3 border" style={{ borderRadius: '8px' }} />
             </div>
             <div>
-                <label htmlFor="workPreference" className="block text-sm font-medium text-slate-700">Work Preference</label>
-                <select id="workPreference" name="workPreference" className="mt-1 block w-full rounded-md border-slate-300 focus:border-slate-900 focus:ring-slate-900 sm:text-sm p-3 border" style={{ borderRadius: '8px' }}>
+                <label htmlFor="workPreference" className="block text-sm font-medium text-slate-800">Work Preference</label>
+                <select id="workPreference" name="workPreference" className="mt-1 block w-full rounded-md placeholder:text-gray-700 border-slate-300 focus:border-slate-900 focus:ring-slate-900 sm:text-sm p-3 border" style={{ borderRadius: '8px' }}>
                     <option>Any</option>
                     <option>Full-time</option>
                     <option>Part-time</option>
                     <option>Contract</option>
                 </select>
             </div>
-        </div>
+        </div> 
 
         <div className="text-right">
             <button

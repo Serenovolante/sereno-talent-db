@@ -7,8 +7,24 @@ interface ProfileModalProps {
   onClose: () => void;
 }
 
+// Helper to format experience years - rounded to single decimal place
+const formatExperience = (years?: number) => {
+    if (years === undefined || years === null) return null;
+    
+    // Round to single decimal place
+    const roundedYears = Number(years.toFixed(1));
+    
+    if (roundedYears < 1) {
+        const months = Math.round(roundedYears * 12);
+        return `${months} mos exp`;
+    } 
+    return `${roundedYears} yrs exp`;
+};
+
 export const ProfileModal = ({ candidate, isOpen, onClose }: ProfileModalProps) => {
   if (!isOpen || !candidate) return null;
+
+  const experienceText = candidate.totalExperience !== undefined ? formatExperience(candidate.totalExperience) : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20">
@@ -27,10 +43,10 @@ export const ProfileModal = ({ candidate, isOpen, onClose }: ProfileModalProps) 
                   <span>{candidate.location}</span>
                 </div>
               )}
-              {candidate.totalExperience !== undefined && (
+              {experienceText && (
                 <div className="flex items-center text-slate-600">
                   <Briefcase className="w-4 h-4 mr-1" />
-                  <span>{candidate.totalExperience} years</span>
+                  <span>{experienceText}</span>
                 </div>
               )}
               {candidate.email && (
@@ -78,6 +94,22 @@ export const ProfileModal = ({ candidate, isOpen, onClose }: ProfileModalProps) 
               )}
             </div>
           )}
+
+          {/* Work Preference and Notes */}
+          <div className="grid grid-cols-1 md:grid-cols-2 mb-8  gap-6">
+            {candidate.workPreference && (
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">Work Preference</h3>
+                <p className="text-slate-700">{candidate.workPreference}</p>
+              </div>
+            )}
+            {candidate.customNotes && (
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">Notes</h3>
+                <p className="text-slate-700">{candidate.customNotes}</p>
+              </div>
+            )}
+          </div>
 
           {/* Skills */}
           {candidate.skills && candidate.skills.length > 0 && (
@@ -144,21 +176,7 @@ export const ProfileModal = ({ candidate, isOpen, onClose }: ProfileModalProps) 
             </div>
           )}
 
-          {/* Work Preference and Notes */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {candidate.workPreference && (
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Work Preference</h3>
-                <p className="text-slate-700">{candidate.workPreference}</p>
-              </div>
-            )}
-            {candidate.customNotes && (
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Notes</h3>
-                <p className="text-slate-700">{candidate.customNotes}</p>
-              </div>
-            )}
-          </div>
+          
         </div>
 
         {/* Modal Footer */}
