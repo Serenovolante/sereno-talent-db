@@ -103,7 +103,7 @@ export const AddCandidateForm = () => {
 
             {/* Custom Notes Field */}
             <div className="mt-6">
-              <label htmlFor="customNotes" className="block text-sm font-medium text-slate-700 mb-2">
+              <label htmlFor="customNotes" className="block text-sm font-medium text-slate-800 mb-2">
                 Custom Notes
               </label>
               <textarea
