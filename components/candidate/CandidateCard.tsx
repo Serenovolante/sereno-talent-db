@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Briefcase, MapPin, BrainCircuit, Sparkles, Eye } from 'lucide-react';
+import { Briefcase, MapPin, BrainCircuit, Sparkles, Eye, Copy } from 'lucide-react';
 import { ProfileModal } from './ProfileModal';
 
 // Make sure your Candidate type is accessible here. 
@@ -112,16 +112,32 @@ export const CandidateCard = ({ candidate }: CandidateCardProps) => {
               </div>
           )}
           {candidate.email && (
-              <div className="flex items-center">
-                  <span className="text-xs bg-slate-100 px-2 py-0.5 rounded" style={{ borderRadius: '4px' }}>
-                      {candidate.email}
+              <div 
+                className="flex items-center cursor-pointer hover:text-slate-800"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(candidate.email!);
+                }}
+                title="Click to copy email"
+              >
+                  <span className="text-xs bg-slate-100 px-2 py-0.5 rounded flex items-center gap-1" style={{ borderRadius: '4px' }}>
+                      <span>{candidate.email}</span>
+                      <Copy className="w-3 h-3" />
                   </span>
               </div>
           )}
           {candidate.phone && (
-              <div className="flex items-center">
-                  <span className="text-xs bg-slate-100 px-2 py-0.5 rounded" style={{ borderRadius: '4px' }}>
-                      {candidate.phone}
+              <div 
+                className="flex items-center cursor-pointer hover:text-slate-800"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(candidate.phone!);
+                }}
+                title="Click to copy phone"
+              >
+                  <span className="text-xs bg-slate-100 px-2 py-0.5 rounded flex items-center gap-1" style={{ borderRadius: '4px' }}>
+                      <span>{candidate.phone}</span>
+                      <Copy className="w-3 h-3" />
                   </span>
               </div>
           )}

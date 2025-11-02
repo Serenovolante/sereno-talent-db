@@ -1,4 +1,4 @@
-import { X, MapPin, Briefcase, Mail, Phone, Sparkles, BrainCircuit } from 'lucide-react';
+import { X, MapPin, Briefcase, Mail, Phone, Sparkles, BrainCircuit, Copy } from 'lucide-react';
 import { Candidate } from './CandidateCard';
 
 interface ProfileModalProps {
@@ -26,6 +26,10 @@ export const ProfileModal = ({ candidate, isOpen, onClose }: ProfileModalProps) 
 
   const experienceText = candidate.totalExperience !== undefined ? formatExperience(candidate.totalExperience) : null;
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20">
       <div 
@@ -50,15 +54,25 @@ export const ProfileModal = ({ candidate, isOpen, onClose }: ProfileModalProps) 
                 </div>
               )}
               {candidate.email && (
-                <div className="flex items-center text-slate-600">
+                <div 
+                  className="flex items-center text-slate-600 hover:text-slate-800 cursor-pointer" 
+                  onClick={() => copyToClipboard(candidate.email!)}
+                  title="Click to copy email"
+                >
                   <Mail className="w-4 h-4 mr-1" />
-                  <span>{candidate.email}</span>
+                  <span className="mr-1">{candidate.email}</span>
+                  <Copy className="w-3 h-3" />
                 </div>
               )}
               {candidate.phone && (
-                <div className="flex items-center text-slate-600">
+                <div 
+                  className="flex items-center text-slate-600 hover:text-slate-800 cursor-pointer" 
+                  onClick={() => copyToClipboard(candidate.phone!)}
+                  title="Click to copy phone"
+                >
                   <Phone className="w-4 h-4 mr-1" />
-                  <span>{candidate.phone}</span>
+                  <span className="mr-1">{candidate.phone}</span>
+                  <Copy className="w-3 h-3" />
                 </div>
               )}
             </div>

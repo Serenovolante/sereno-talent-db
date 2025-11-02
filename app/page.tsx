@@ -71,13 +71,14 @@ export default function Home() {
     <div className="min-h-screen bg-[#F5F5F5]">
       <main className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-start items-center space-x-3 mb-8">
+          <img src="/Sereno_Logo.png" alt="Sereno Logo" className="h-10" />
           <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
-            Sereno Talent Intelligence
+            Sereno Talent Graph
           </h1>
         </div>
         <p className="text-base text-slate-600 mb-10">
-          The single source for parsing, storing, and discovering talent.
+          AI-native platform to parse, understand, and match talent at enterprise scale.
         </p>
 
         {/* Tab Navigation */}
@@ -127,6 +128,9 @@ export default function Home() {
               )}
             </div>
           )}
+        </div>
+        <div className="border-t border-slate-200 pt-6 mt-12 w-full">
+          <p className="text-center text-slate-600 italic">Backed by Sereno AI Core - auto-parses resumes, infers skills, and ranks candidates by contextual fit</p>
         </div>
       </main>
     </div>
