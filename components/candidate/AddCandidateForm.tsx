@@ -6,6 +6,7 @@ import { UploadCloud, FileText, X } from 'lucide-react';
 
 export const AddCandidateForm = () => {
   const [file, setFile] = useState<File | null>(null);
+  const [customNotes, setCustomNotes] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -37,6 +38,7 @@ export const AddCandidateForm = () => {
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('customNotes', customNotes);
 
     try {
       const response = await fetch('/api/candidates/upload', {
@@ -49,6 +51,7 @@ export const AddCandidateForm = () => {
       if (result.success) {
         setSuccess(`${result.candidateName} has been successfully added.`);
         setFile(null);
+        setCustomNotes('');
       } else {
         setError(result.error || "Failed to parse the resume. Please try another file.");
       }
@@ -97,6 +100,23 @@ export const AddCandidateForm = () => {
                     <button onClick={removeFile} className="text-slate-500 hover:text-red-600"><X className="w-5 h-5" /></button>
                 </div>
             )}
+
+            {/* Custom Notes Field */}
+            <div className="mt-6">
+              <label htmlFor="customNotes" className="block text-sm font-medium text-slate-700 mb-2">
+                Custom Notes
+              </label>
+              <textarea
+                id="customNotes"
+                name="customNotes"
+                value={customNotes}
+                onChange={(e) => setCustomNotes(e.target.value)}
+                rows={3}
+                className="block w-full rounded-md border-slate-300 focus:border-slate-900 focus:ring-slate-900 sm:text-sm p-3 border"
+                placeholder="Add any notes about this candidate..."
+                style={{ borderRadius: '8px' }}
+              />
+            </div>
 
             {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
             {success && <p className="mt-4 text-sm text-green-600">{success}</p>}
