@@ -36,6 +36,7 @@ export interface Candidate {
 
 interface CandidateCardProps {
   candidate: Candidate;
+  onDelete?: (id: string) => void;
 }
 
 // Helper to format experience years - rounded to single decimal place
@@ -60,7 +61,7 @@ const getPrimaryRole = (candidate: Candidate) => {
     return "No role specified";
 };
 
-export const CandidateCard = ({ candidate }: CandidateCardProps) => {
+export const CandidateCard = ({ candidate, onDelete }: CandidateCardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const primaryRole = getPrimaryRole(candidate);
   const experienceText = formatExperience(candidate.totalExperience);
@@ -192,6 +193,7 @@ export const CandidateCard = ({ candidate }: CandidateCardProps) => {
         candidate={candidate} 
         isOpen={isModalOpen} 
         onClose={closeModal} 
+        onDelete={onDelete}
       />
     </>
   );

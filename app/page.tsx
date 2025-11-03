@@ -66,6 +66,29 @@ export default function Home() {
         setHasSearched(true);
     };
 
+    const handleDeleteCandidate = async (id: string) => {
+        try {
+            const response = await fetch(`/api/candidates/${id}`, {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Remove the deleted candidate from the search results
+                setSearchResults(prevResults => 
+                    prevResults.filter(candidate => candidate._id !== id)
+                );
+                alert('Candidate deleted successfully!');
+            } else {
+                alert(data.error || 'Failed to delete candidate');
+            }
+        } catch (error) {
+            console.error('Error deleting candidate:', error);
+            alert('An error occurred while deleting the candidate');
+        }
+    };
+
     return (
         // A light, neutral background for the entire page.
         <div className="min-h-screen bg-gray-50 font-sans">
@@ -125,6 +148,7 @@ export default function Home() {
                                                     <CandidateCard
                                                         key={candidate._id}
                                                         candidate={candidate}
+                                                        onDelete={handleDeleteCandidate}
                                                     />
                                                 ))}
                                             </div>

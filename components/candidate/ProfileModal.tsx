@@ -1,10 +1,11 @@
-import { X, MapPin, Briefcase, Mail, Phone, Sparkles, BrainCircuit, Copy } from 'lucide-react';
+import { X, MapPin, Briefcase, Mail, Phone, Sparkles, BrainCircuit, Copy, Trash2 } from 'lucide-react';
 import { Candidate } from './CandidateCard';
 
 interface ProfileModalProps {
   candidate: Candidate | null;
   isOpen: boolean;
   onClose: () => void;
+  onDelete?: (id: string) => void;
 }
 
 // Helper to format experience years - rounded to single decimal place
@@ -21,13 +22,22 @@ const formatExperience = (years?: number) => {
     return `${roundedYears} yrs exp`;
 };
 
-export const ProfileModal = ({ candidate, isOpen, onClose }: ProfileModalProps) => {
+export const ProfileModal = ({ candidate, isOpen, onClose, onDelete }: ProfileModalProps) => {
   if (!isOpen || !candidate) return null;
 
   const experienceText = candidate.totalExperience !== undefined ? formatExperience(candidate.totalExperience) : null;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
+  };
+
+  const handleDelete = async () => {
+    if (!candidate._id || !onDelete) return;
+    
+    const confirmed = window.confirm(`Are you sure you want to delete ${candidate.name}'s profile? This action cannot be undone.`);
+    if (confirmed) {
+      onDelete(candidate._id);
+    }
   };
 
   return (
@@ -194,7 +204,15 @@ export const ProfileModal = ({ candidate, isOpen, onClose }: ProfileModalProps) 
         </div>
 
         {/* Modal Footer */}
-        <div className="p-6 border-t border-slate-200 flex justify-end">
+        <div className="p-6 border-t border-slate-200 flex justify-between">
+          <button
+            onClick={handleDelete}
+            className="px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 flex items-center"
+            style={{ borderRadius: '8px' }}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete Candidate
+          </button>
           <button
             onClick={onClose}
             className="px-4 py-2 bg-slate-800 text-white rounded-md font-medium hover:bg-slate-900"
