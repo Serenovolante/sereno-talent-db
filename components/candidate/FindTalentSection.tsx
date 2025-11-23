@@ -19,10 +19,15 @@ export const FindTalentForm = ({ onSearch, isSearching }: FindTalentFormProps) =
         const formData = new FormData(e.currentTarget);
         const data = Object.fromEntries(formData.entries());
 
-        // A more user-friendly validation check
-        if (!data.jd && !data.keywords) {
-            setError("Please provide a Job Description or some Skills/Keywords to start the analysis.");
-            return;
+        // Check if any filter is provided
+        const hasAnyFilter = data.jd ||
+                           (data.keywords && data.keywords.toString().trim() !== '') ||
+                           data.experience ||
+                           (data.workPreference && data.workPreference !== 'Any');
+
+        if (!hasAnyFilter) {
+            // If no filters provided, it means user wants to see all candidates
+            // So we proceed with empty search criteria
         }
 
         // The API call logic remains the same

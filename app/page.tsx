@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AddCandidateForm } from '@/components/candidate/AddCandidateForm';
 import { FindTalentForm } from '@/components/candidate/FindTalentSection';
 import { CandidateCard } from '@/components/candidate/CandidateCard';
@@ -41,6 +41,8 @@ export default function Home() {
     const [searchResults, setSearchResults] = useState<Candidate[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
+    const [hasLoadedDefault, setHasLoadedDefault] = useState(false);
+    const [isDefaultSearch, setIsDefaultSearch] = useState(false);
 
     // TabButton component restyled to match the clean, high-contrast aesthetic.
     const TabButton = ({ tabId, label }: { tabId: Tab; label: string }) => (
@@ -48,7 +50,9 @@ export default function Home() {
             onClick={() => {
                 setActiveTab(tabId);
                 setHasSearched(false);
-                setSearchResults([]);
+                if (tabId === 'find' && !hasLoadedDefault) {
+                    fetchDefaultCandidates();
+                }
             }}
             className={`px-5 py-2 text-sm cursor-pointer font-medium rounded-md transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-800
         ${activeTab === tabId
@@ -60,10 +64,48 @@ export default function Home() {
         </button>
     );
 
+    // Function to fetch all candidates by default
+    const fetchDefaultCandidates = async () => {
+        if (hasLoadedDefault) return; // Prevent multiple calls
+
+        setIsSearching(true);
+        setIsDefaultSearch(true); // Mark that this is a default search
+        try {
+            const response = await fetch('/api/candidates/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}), // Empty body to get all candidates
+            });
+
+            if (response.ok) {
+                const results = await response.json();
+                setSearchResults(results);
+                setHasSearched(true);
+                setHasLoadedDefault(true);
+            } else {
+                console.error('Failed to fetch default candidates');
+                setSearchResults([]);
+            }
+        } catch (error) {
+            console.error('Error fetching default candidates:', error);
+            setSearchResults([]);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    // Fetch all candidates by default when the component mounts and tab is 'find'
+    useEffect(() => {
+        if (activeTab === 'find' && !hasLoadedDefault && searchResults.length === 0) {
+            fetchDefaultCandidates();
+        }
+    }, [activeTab, hasLoadedDefault, searchResults.length]);
+
     const handleSearchResults = (results: Candidate[]) => {
         setSearchResults(results);
         setIsSearching(false);
         setHasSearched(true);
+        setIsDefaultSearch(false); // Reset default search flag when a specific search is made
     };
 
     const handleDeleteCandidate = async (id: string) => {
@@ -138,10 +180,12 @@ export default function Home() {
                                     </div>
                                 )}
 
-                                {/* RESULTS */}
-                                {hasSearched && !isSearching && (
+                                {/* RESULTS - This shows for both specific searches and default load */}
+                                {(hasSearched || (hasLoadedDefault && searchResults.length > 0)) && !isSearching && (
                                     <div>
-                                        <h2 className="text-lg font-semibold text-gray-800 mb-6">Analysis Results ({searchResults.length})</h2>
+                                        <h2 className="text-lg font-semibold text-gray-800 mb-6">
+                                            {isDefaultSearch ? 'All Candidates' : `Analysis Results (${searchResults.length})`}
+                                        </h2>
                                         {searchResults.length > 0 ? (
                                             <div className="grid grid-cols-1 md:grid-cols-2  gap-6">
                                                 {searchResults.map((candidate) => (
@@ -155,8 +199,8 @@ export default function Home() {
                                         ) : (
                                             // EMPTY STATE: A cleaner, more intentional design.
                                             <div className="text-center py-16 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg">
-                                                <h3 className="text-base font-semibold text-gray-800">No Matches Found</h3>
-                                                <p className="text-gray-500 text-sm mt-1">Try adjusting your search criteria.</p>
+                                                <h3 className="text-base font-semibold text-gray-800">No Candidates Found</h3>
+                                                <p className="text-gray-500 text-sm mt-1">No candidates in the database yet.</p>
                                             </div>
                                         )}
                                     </div>

@@ -50,8 +50,6 @@ export async function POST(request: NextRequest) {
     if (skillKeywords.length > 0) {
       const keywordsRegex = skillKeywords.map(keyword => new RegExp(keyword, "i"));
       filter.skills = { $in: keywordsRegex };
-    } else {
-      return NextResponse.json([]);
     }
 
     const pipeline: any[] = [
@@ -93,6 +91,12 @@ export async function POST(request: NextRequest) {
       });
 
       pipeline.push({ $sort: { relevanceScore: -1, densityScore: -1 } });
+    } else if (Object.keys(filter).length === 0) {
+      // If no filter criteria or keywords, just get all candidates and sort by name
+      pipeline.push({ $sort: { name: 1 } });
+    } else {
+      // If only filters were provided (e.g. experience, work preference), sort by name
+      pipeline.push({ $sort: { name: 1 } });
     }
 
     pipeline.push({ $limit: 30 }); // Limit to a reasonable number for AI processing
@@ -107,6 +111,17 @@ export async function POST(request: NextRequest) {
     }
     if (!jd || jd.trim() === '') {
       // If no JD, we can't do AI analysis, so return the DB-scored results directly.
+      // If there were no keywords, just return the filtered candidates without scoring
+      if (allKeywordsForScoring.length === 0) {
+        return NextResponse.json(initialCandidates.map(candidate => ({
+          ...candidate,
+          _id: candidate._id.toString(),
+          relevanceScore: 0,  // Adding this for consistent response format
+          densityScore: 0,    // Adding this for consistent response format
+          aiScore: null,      // Adding this for consistent response format
+          reasonToHire: '',   // Adding this for consistent response format
+        })));
+      }
       return NextResponse.json(initialCandidates);
     }
 
