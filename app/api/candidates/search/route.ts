@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Candidate from '@/models/candidate';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 
-// Initialize the Gemini client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+// Initialize DeepSeek client
+const deepseek = new OpenAI({
+  apiKey: process.env.DEEPSEEK_API_KEY!,
+  baseURL: 'https://api.deepseek.com',
+});
+
+
 
 // Helper function to process keywords
 const processTextToKeywords = (text: string | null | undefined): string[] => {
@@ -40,9 +46,11 @@ export async function POST(request: NextRequest) {
     if (experience) {
       filter.totalExperience = { $gte: parseInt(experience, 10) };
     }
+
     if (workPreference && workPreference !== 'Any') {
       filter.workPreference = { $regex: workPreference, $options: 'i' };
     }
+
     if (skillKeywords.length > 0) {
       const keywordsRegex = skillKeywords.map(keyword => new RegExp(keyword, "i"));
       filter.skills = { $in: keywordsRegex };
@@ -56,8 +64,28 @@ export async function POST(request: NextRequest) {
       const matchConditions = skillKeywords.map(keyword => {
         return {
           $cond: [
-            { $gt: [{ $size: { $filter: { input: { $ifNull: ["$skills", []] }, as: "candidateSkill", cond: { $regexMatch: { input: "$$candidateSkill", regex: keyword, options: "i" } } } } }, 0] },
-            1, 0
+            {
+              $gt: [
+                {
+                  $size: {
+                    $filter: {
+                      input: { $ifNull: ["$skills", []] },
+                      as: "candidateSkill",
+                      cond: {
+                        $regexMatch: {
+                          input: "$$candidateSkill",
+                          regex: keyword,
+                          options: "i"
+                        }
+                      }
+                    }
+                  }
+                },
+                0
+              ]
+            },
+            1,
+            0
           ]
         };
       });
@@ -65,10 +93,52 @@ export async function POST(request: NextRequest) {
       pipeline.push({
         $addFields: {
           matchedSkillCount: { $add: matchConditions },
+
           densityScore: {
             $add: [
-              { $size: { $filter: { input: { $ifNull: ["$skills", []] }, as: "skill", cond: { $regexMatch: { input: "$$skill", regex: allKeywordsForScoring.join('|'), options: "i" } } } } },
-              { $sum: { $map: { input: "$careerTimeline", as: "timeline", in: { $size: { $filter: { input: { $split: [{ $ifNull: ["$$timeline.description", ""] }, " "] }, cond: { $regexMatch: { input: "$$this", regex: allKeywordsForScoring.join('|'), options: "i" } } } } } } } }
+              {
+                $size: {
+                  $filter: {
+                    input: { $ifNull: ["$skills", []] },
+                    as: "skill",
+                    cond: {
+                      $regexMatch: {
+                        input: "$$skill",
+                        regex: allKeywordsForScoring.join('|'),
+                        options: "i"
+                      }
+                    }
+                  }
+                }
+              },
+
+              {
+                $sum: {
+                  $map: {
+                    input: "$careerTimeline",
+                    as: "timeline",
+                    in: {
+                      $size: {
+                        $filter: {
+                          input: {
+                            $split: [
+                              { $ifNull: ["$$timeline.description", ""] },
+                              " "
+                            ]
+                          },
+                          cond: {
+                            $regexMatch: {
+                              input: "$$this",
+                              regex: allKeywordsForScoring.join('|'),
+                              options: "i"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             ]
           }
         }
@@ -79,16 +149,39 @@ export async function POST(request: NextRequest) {
           relevanceScore: {
             $cond: {
               if: { $eq: [skillKeywords.length, 0] },
+
               then: 0,
-              else: { $round: [{ $multiply: [{ $divide: ["$matchedSkillCount", skillKeywords.length] }, 100] }] }
+
+              else: {
+                $round: [
+                  {
+                    $multiply: [
+                      {
+                        $divide: [
+                          "$matchedSkillCount",
+                          skillKeywords.length
+                        ]
+                      },
+                      100
+                    ]
+                  }
+                ]
+              }
             }
           }
         }
       });
 
-      pipeline.push({ $sort: { relevanceScore: -1, densityScore: -1 } });
+      pipeline.push({
+        $sort: {
+          relevanceScore: -1,
+          densityScore: -1
+        }
+      });
+
     } else if (Object.keys(filter).length === 0) {
       pipeline.push({ $sort: { name: 1 } });
+
     } else {
       pipeline.push({ $sort: { name: 1 } });
     }
@@ -102,32 +195,49 @@ export async function POST(request: NextRequest) {
     if (!initialCandidates || initialCandidates.length === 0) {
       return NextResponse.json([]);
     }
+
     if (!jd || jd.trim() === '') {
+
       if (allKeywordsForScoring.length === 0) {
-        return NextResponse.json(initialCandidates.map(candidate => ({
+
+        return NextResponse.json(
+          initialCandidates.map(candidate => ({
+            ...candidate,
+            _id: candidate._id.toString(),
+            expectedCTC: candidate.expectedCTC,
+            relevanceScore: 0,
+            densityScore: 0,
+            aiScore: null,
+            reasonToHire: '',
+          }))
+        );
+      }
+
+      return NextResponse.json(
+        initialCandidates.map(candidate => ({
           ...candidate,
           _id: candidate._id.toString(),
-          relevanceScore: 0,
-          densityScore: 0,
-          aiScore: null,
-          reasonToHire: '',
-        })));
-      }
-      return NextResponse.json(initialCandidates);
+          expectedCTC: candidate.expectedCTC,
+        }))
+      );
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const chunkSize = 10;
+
     const finalEnrichedCandidates = [];
 
     for (let i = 0; i < initialCandidates.length; i += chunkSize) {
+
       const chunk = initialCandidates.slice(i, i + chunkSize);
 
       const candidatesForAI = chunk.map(c => {
+
         const { __v, ...rest } = c;
+
         return {
           ...rest,
-          _id: c._id.toString()
+          _id: c._id.toString(),
+          expectedCTC: c.expectedCTC,
         };
       });
 
@@ -156,39 +266,85 @@ export async function POST(request: NextRequest) {
       `;
 
       try {
-        const result = await model.generateContent(prompt);
-        const aiResponse = result.response.text();
+
+        const completion = await deepseek.chat.completions.create({
+          model: 'deepseek-v4-flash',
+
+          messages: [
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+
+          temperature: 0.3,
+        });
+
+        const aiResponse = completion.choices[0]?.message?.content;
 
         if (aiResponse) {
-          const cleanText = aiResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-          const aiData: AIAnalysisResult[] = JSON.parse(cleanText).results;
-          const aiDataMap = new Map(aiData.map((item: AIAnalysisResult) => [item.candidateId, item]));
+
+          const cleanText = aiResponse
+            .replace(/^```json\s*/, '')
+            .replace(/\s*```$/, '')
+            .trim();
+
+          const aiData: AIAnalysisResult[] =
+            JSON.parse(cleanText).results;
+
+          const aiDataMap = new Map(
+            aiData.map((item: AIAnalysisResult) => [
+              item.candidateId,
+              item
+            ])
+          );
 
           const enrichedChunk = chunk.map(candidate => ({
             ...candidate,
-            aiScore: aiDataMap.get(candidate._id.toString())?.aiScore ?? null,
-            reasonToHire: aiDataMap.get(candidate._id.toString())?.reasonToHire ?? 'AI analysis could not be completed.',
+            expectedCTC: candidate.expectedCTC,
+
+            aiScore:
+              aiDataMap.get(candidate._id.toString())?.aiScore ?? null,
+
+            reasonToHire:
+              aiDataMap.get(candidate._id.toString())?.reasonToHire ??
+              'AI analysis could not be completed.',
           }));
 
           finalEnrichedCandidates.push(...enrichedChunk);
         }
+
       } catch (error) {
-        console.error("Gemini API call failed for a chunk:", error);
+
+        console.error('DeepSeek API call failed for a chunk:', error);
+
         const failedChunk = chunk.map(candidate => ({
           ...candidate,
+          expectedCTC: candidate.expectedCTC,
+
           aiScore: null,
-          reasonToHire: "AI analysis failed for this candidate.",
+
+          reasonToHire:
+            'AI analysis failed for this candidate.',
         }));
+
         finalEnrichedCandidates.push(...failedChunk);
       }
     }
 
-    finalEnrichedCandidates.sort((a, b) => (b.aiScore ?? 0) - (a.aiScore ?? 0));
+    finalEnrichedCandidates.sort(
+      (a, b) => (b.aiScore ?? 0) - (a.aiScore ?? 0)
+    );
 
     return NextResponse.json(finalEnrichedCandidates);
 
   } catch (error: any) {
+
     console.error('Search error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

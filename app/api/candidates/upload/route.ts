@@ -1,14 +1,22 @@
 import { NextResponse } from 'next/server';
 import mammoth from 'mammoth';
 import PDFParse from 'pdf-parse-fork';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 import Candidate from '@/models/candidate';
 import connectToDatabase from '@/lib/mongodb';
+
+const deepseek = new OpenAI({
+  apiKey: process.env.DEEPSEEK_API_KEY!,
+  baseURL: 'https://api.deepseek.com',
+});
 
 async function parseResume(file: File): Promise<string> {
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+  if (
+    file.type ===
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ) {
     const { value } = await mammoth.extractRawText({ buffer });
     return value;
   } else if (file.type === 'application/pdf') {
@@ -22,18 +30,23 @@ async function parseResume(file: File): Promise<string> {
 export async function POST(request: Request) {
   try {
     await connectToDatabase();
+
     const data = await request.formData();
+
     const file: File | null = data.get('file') as unknown as File;
+
     const customNotes: string | null = data.get('customNotes') as string | null;
+    const expectedCTC: string | null = data.get('expectedCTC') as string | null;
 
     if (!file) {
-      return NextResponse.json({ success: false, error: 'No file uploaded' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'No file uploaded' },
+        { status: 400 }
+      );
     }
 
     const resumeText = await parseResume(file);
-    
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    console.log(resumeText.length);
 
     const prompt = `
       You are an expert resume parser. Your task is to analyze the provided resume text and custom notes, and return a structured JSON object containing the candidate's information.
@@ -51,7 +64,7 @@ export async function POST(request: Request) {
         "careerTimeline": [
           {
             "role": "string",
-            "company": "string", 
+            "company": "string",
             "startDate": "string",
             "endDate": "string",
             "description": "string"
@@ -86,21 +99,56 @@ export async function POST(request: Request) {
       - Ensure all dates are in a consistent format (YYYY-MM or YYYY)
     `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const completion = await deepseek.chat.completions.create({
+      model: 'deepseek-v4-flash',
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      temperature: 0.2,
+    });
 
-    const cleanText = text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    const text = completion.choices[0]?.message?.content || '';
+
+    console.log(text);
+
+    const cleanText = text
+      .replace(/^```json\s*/, '')
+      .replace(/\s*```$/, '')
+      .trim();
 
     const candidateData = JSON.parse(cleanText);
 
+//     const candidateData = {
+//   name: "Test Candidate",
+//   email: "test@test.com",
+//   skills: [],
+//   customNotes,
+//   expectedCTC,
+// };
+
+
+    candidateData.expectedCTC = expectedCTC || '';
+
     const newCandidate = new Candidate(candidateData);
+
     await newCandidate.save();
 
-    return NextResponse.json({ success: true, candidate: newCandidate });
-
+    return NextResponse.json({
+      success: true,
+      candidate: newCandidate,
+    });
   } catch (error: any) {
     console.error('Upload error:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Failed to process file' }, { status: 500 });
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message || 'Failed to process file',
+      },
+      { status: 500 }
+    );
   }
 }

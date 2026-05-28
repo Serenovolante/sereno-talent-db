@@ -14,6 +14,7 @@ export interface Candidate {
   location?: string;
   workPreference?: string;
   customNotes?: string;
+  expectedCTC?: string;
   careerTimeline: {
     role: string;
     company: string;
@@ -106,12 +107,22 @@ export const CandidateCard = ({ candidate, onDelete }: CandidateCardProps) => {
                   <span>{candidate.location}</span>
               </div>
           )}
+
           {experienceText && (
               <div className="flex items-center">
                   <Briefcase className="w-4 h-4 text-slate-500 mr-1.5" />
                   <span>{experienceText}</span>
               </div>
           )}
+
+          {candidate.expectedCTC && (
+              <div className="flex items-center">
+                  <span className="text-xs bg-slate-100 px-2 py-0.5 rounded" style={{ borderRadius: '4px' }}>
+                      Expected CTC: {candidate.expectedCTC}
+                  </span>
+              </div>
+          )}
+
           {candidate.email && (
               <div 
                 className="flex items-center cursor-pointer hover:text-slate-800"
@@ -127,6 +138,7 @@ export const CandidateCard = ({ candidate, onDelete }: CandidateCardProps) => {
                   </span>
               </div>
           )}
+
           {candidate.phone && (
               <div 
                 className="flex items-center cursor-pointer hover:text-slate-800"
@@ -165,6 +177,7 @@ export const CandidateCard = ({ candidate, onDelete }: CandidateCardProps) => {
                   {skill}
                 </span>
               ))}
+
               {candidate.skills.length > 5 && (
                    <span className="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-500 text-xs font-medium" style={{ borderRadius: '4px' }}>
                       +{candidate.skills.length - 5} more
