@@ -13,7 +13,7 @@
     "lucide-react": "^0.552.0",
     "mammoth": "^1.11.0",
     "mongoose": "^8.19.2",
-    "next": "16.0.1",
+    "next": "16.0.10",
     "openai": "^6.7.0",
     "pdf-parse-fork": "^1.2.0",
     "pdfjs-dist": "^5.4.296",
