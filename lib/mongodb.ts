@@ -19,7 +19,7 @@ async function connectToDatabase() {
     const opts = {
       bufferCommands: false,
     };
-    console.log("URI:", MONGODB_URI);
+    
 
     global.mongoose!.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
       return mongoose.connection;

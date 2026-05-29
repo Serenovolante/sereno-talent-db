@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     }
 
     const resumeText = await parseResume(file);
-    console.log(resumeText.length);
+    
 
     const prompt = `
       You are an expert resume parser. Your task is to analyze the provided resume text and custom notes, and return a structured JSON object containing the candidate's information.
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
 
     const text = completion.choices[0]?.message?.content || '';
 
-    console.log(text);
+    
 
     const cleanText = text
       .replace(/^```json\s*/, '')
